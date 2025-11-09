@@ -3,6 +3,21 @@ from pydantic import BaseModel
 import re
 
 app = FastAPI()
+from typing import Optional
+from fastapi import Query
+from olx_search import search_olx
+
+@app.get("/debug_olx")
+def debug_olx(q: Optional[str] = Query(None, description="Пошуковий запит")):
+    if not q:
+        return {"hint": "Додайте параметр ?q=ваш_запит, наприклад: /debug_olx?q=Ноутбук Acer i5"}
+    items = search_olx(q, limit=10)
+    # Повертаємо перші кілька полів, щоб було зручно дивитися
+    simplified = [
+        {"title": it["title"], "price_uah": it["price_uah"], "url": it["url"]}
+        for it in items
+    ]
+    return {"count": len(simplified), "items": simplified}
 
 # ---- Допоміжні функції для красивого тексту (Markdown) ----
 MDV2_SPECIALS = r"_ * [ ] ( ) ~ > # + - = | { } . !".split()
